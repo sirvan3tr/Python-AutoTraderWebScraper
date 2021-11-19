@@ -2,9 +2,10 @@
 Scrapes the second hand car marketplace; only for educational purposes.
 
 ## TODO
-- Scrape all pages
-- Use click to enable CLI usage
+- Scrape all pages.
+- Use click to enable CLI usage.
 - Allow to feed in search query from a json file. 
+- Multi-threading to scrape different pages.
 
 ## Install
 Developed using `python3.9.7`; will probably work with 3.8+

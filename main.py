@@ -60,6 +60,8 @@ def parse_page(page_number: int, search_query: SearchQuery):
     :returns: List of Vehicle instances [Vehicle]
     """
     # Get the request URL from SearchQuery
+    # TODO: Change this :(
+    search_query.page = page_number
     url = search_query.url()
     try:
         r = requests.get(url, headers=headers)
@@ -94,10 +96,17 @@ def parse_page(page_number: int, search_query: SearchQuery):
                           price=price,
                           specs=specs)
         vehicles.append(vehicle)
+        print(vehicle)
     return vehicles
 
 
 if __name__ == '__main__':
     # Define your queries here
     search_query = SearchQuery()
-    print(parse_page(1, search_query))
+    # print(parse_page(1, search_query))
+
+    import threading
+
+    for i in range(1, 6):
+        t = threading.Thread(target=parse_page, args=(i, search_query))
+        t.start()

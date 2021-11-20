@@ -107,6 +107,6 @@ if __name__ == '__main__':
 
     import threading
 
-    for i in range(1, 6):
+    for i in range(1, 2):
         t = threading.Thread(target=parse_page, args=(i, search_query))
         t.start()

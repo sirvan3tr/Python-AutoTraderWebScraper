@@ -1,8 +1,11 @@
 """
-This is an experimental code and should not be used for
-any commercial purposes at all.
+Copyrights (c) S Almasi 2022.
+This is an experimental code and should not be used for any commercial purposes
+at all.
 """
 from dataclasses import dataclass
+from re import search
+import time
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -19,11 +22,11 @@ class SearchQuery:
     year_from: str = "2011"
     year_to: str = "2021"
     min_mileage: int = 500
-    max_mileage: int = 50000
+    max_mileage: int = 50_000
     fuel_type: str = "Petrol"
     postcode: str = "SW72AZ"
     price_from: int = 500
-    price_to: int = 80000
+    price_to: int = 45_000
     page: int = 1
 
     def get_url_params(self):
@@ -49,6 +52,9 @@ class Vehicle:
     date: str
     price: str
     specs: list
+    title: str
+    subtitle: str
+
 
 
 def parse_page(page_number: int, search_query: SearchQuery):
@@ -73,6 +79,14 @@ def parse_page(page_number: int, search_query: SearchQuery):
     # Get the vehicle cards/items
     # TODO: Raise an error if the dom and classes are changed
     vehicle_cards = soup.find_all('li', class_='search-page__result')
+
+    # Get the pagination numbers, if we have gone beyond the max pagination
+    # then return an empty list.
+    page_nums = list(map(lambda htmltag: int(htmltag.text),
+        soup.find("li", class_="paginationMini__count").find_all("strong")))
+    if page_number > max(page_nums):
+        return []
+
     # List of vehicles to return
     vehicles = []  # [Vehicle]
     # For each of the vehicle html cards, scrape the data content
@@ -86,6 +100,16 @@ def parse_page(page_number: int, search_query: SearchQuery):
         # TODO: Raise an error if the dom and classes are changed
         specs_html = vehicle_card\
             .find("ul", class_="listing-key-specs")
+        title = vehicle_card\
+            .find("h3", class_="product-card-details__title")\
+            .text\
+            .strip()\
+            .replace("\n", "")
+        subtitle = vehicle_card\
+            .find("p", class_="product-card-details__subtitle")\
+            .text\
+            .strip()\
+            .replace("\n", "")
         # Actual specs, each is inside an li
         specs = list(map(lambda htmltag: htmltag.text,
                          specs_html.find_all("li", recursive=False)))
@@ -94,19 +118,40 @@ def parse_page(page_number: int, search_query: SearchQuery):
                           model=search_query.model,
                           date=datetime.now(),
                           price=price,
-                          specs=specs)
+                          specs=specs,
+                          title=title,
+                          subtitle=subtitle
+                        )
         vehicles.append(vehicle)
-        print(vehicle)
+        # print(vehicle)
+    return vehicles
+
+def scrape(search_query):
+    vehicle_count = 999
+    page_number = 1
+    vehicles = [] 
+
+    while vehicle_count > 0:
+        parsed_vehicles = parse_page(page_number=page_number,
+                                     search_query=search_query)
+        vehicle_count = len(parsed_vehicles)
+        vehicles += parsed_vehicles
+        time.sleep(0.5)
+        page_number += 1
+    
     return vehicles
 
 
 if __name__ == '__main__':
     # Define your queries here
     search_query = SearchQuery()
+    print(search_query.url())
     # print(parse_page(1, search_query))
 
-    import threading
+    # import threading
 
-    for i in range(1, 2):
-        t = threading.Thread(target=parse_page, args=(i, search_query))
-        t.start()
+    # for i in range(1, 2):
+    #     t = threading.Thread(target=parse_page, args=(i, search_query))
+    #     t.start()
+    vehicles = scrape(search_query)
+    breakpoint()

@@ -154,4 +154,3 @@ if __name__ == '__main__':
     #     t = threading.Thread(target=parse_page, args=(i, search_query))
     #     t.start()
     vehicles = scrape(search_query)
-    breakpoint()
